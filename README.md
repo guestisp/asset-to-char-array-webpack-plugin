@@ -36,4 +36,4 @@ You can pass an object of configuration options to `AssetToCharArrayPlugin`, wit
 
 # License
 
-This project is licensed under [GPL](https://github.com/guestisp/asset-to-char-array-webpack-plugin/blob/main/LICENSE).
+This project is licensed under [AGPL-3.0](https://github.com/guestisp/asset-to-char-array-webpack-plugin/blob/main/LICENSE).

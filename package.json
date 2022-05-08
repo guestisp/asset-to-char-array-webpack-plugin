@@ -18,7 +18,7 @@
       "name": "Alessandro Corbelli",
       "email": "assistenza@guest.it"
     },
-    "license": "GPLv3",
+    "license": "AGPL-3.0",
     "bugs": {
       "url": "https://github.com/guestisp/asset-to-char-array-webpack-plugin/issues"
     },
