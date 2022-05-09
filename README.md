@@ -28,7 +28,7 @@ Configuration
 
 You can pass an object of configuration options to `AssetToCharArrayPlugin`, with the following optional items:
 
- - `charNamePrefix`: Prefix to use when generating the C/C++ const names. Default: `asset_to_char_plugin_`
+ - `charNamePrefix`: Prefix to use when generating the C/C++ const names. Default: `_`
  - `addComments`: Add a small comment with the file name before each const. Default: `true`,
  - `serverObject`: Server class names used for the route mapping. Default: `server`,
  - `addServerCalls`: If true, the output file contains also the route mapping. Default: `true`,
