@@ -76,7 +76,7 @@ class AssetToCharArrayPlugin {
         str += '           memcpy_P((char*)buffer, '+char+' + alreadySent, ReadAmount);\n'
         str += '\n'
         str += '           return ReadAmount;\n'
-        str += '});\n'
+        str += '         });\n'
 
     return str
   }
