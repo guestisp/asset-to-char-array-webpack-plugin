@@ -1,6 +1,6 @@
 {
     "name": "asset-to-char-array-webpack-plugin",
-    "version": "1.0.14",
+    "version": "1.0.16",
     "description": "A webpack plugin that automatically convert all assets to C char arrays ready to use with Arduino",
     "main": "index.js",
     "repository": {

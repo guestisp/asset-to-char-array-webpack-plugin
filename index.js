@@ -5,6 +5,23 @@ const fs = require('fs');
 const mime = require('mime/lite');
 const CryptoJS = require("crypto-js");
 
+/*
+ * replaceAll polyfill
+ */
+if (!String.prototype.replaceAll) {
+	String.prototype.replaceAll = function(str, newStr){
+
+		// If a regex pattern
+		if (Object.prototype.toString.call(str).toLowerCase() === '[object regexp]') {
+			return this.replace(str, newStr);
+		}
+
+		// If a string
+		return this.replace(new RegExp(str, 'g'), newStr);
+
+	};
+}
+
 class AssetToCharArrayPlugin {
   options = {}
 
@@ -63,10 +80,17 @@ class AssetToCharArrayPlugin {
     }
   }
 
+  escapeRegex(regexString) {
+    return regexString.replaceAll(/[.*+?^${}()|[\]\\\/]/g, '\\\\$&');
+  }
+  
+
   generateChunkedResponse(type, char, len) {
-    let str  = '         AsyncWebServerResponse *response = request->beginResponse("'+type+'", '+len+', [](uint8_t *buffer, size_t maxLen, size_t alreadySent) -> size_t {\n'
+    let str  = '         AsyncWebServerResponse *response = request->beginChunkedResponse("'+type+'", [](uint8_t *buffer, size_t maxLen, size_t alreadySent) -> size_t {\n'
         str += '           size_t ReadAmount = 0;\n'
         str += '\n'
+        str += '           Serial.print("alreadySent:");\n'
+        str += '           Serial.println(alreadySent);\n'
         str += '           if ( ('+len+' - alreadySent) > maxLen ) {\n'
         str += '              ReadAmount = maxLen;\n'
         str += '           } else {\n'
@@ -112,10 +136,12 @@ class AssetToCharArrayPlugin {
       const files = this.getAllFiles(root);
       files.forEach(file => {
         let localName = this.fullPathToLocalPath(file)
+        let localNameNoGz = localName.replace(/\.gz$/i,'')
         let localName_md5 = CryptoJS.MD5(localName).toString()
         let constantString = this.options.charNamePrefix + localName_md5
         let constantLen = this.options.charNamePrefix + localName_md5 + '_len'
         let contentType = mime.getType(file.replace(/\.gz$/i,'')) || "text/plain"
+        let regex = '^' + this.escapeRegex(localNameNoGz)+'(\\\\.gz)?$'
 
         if (this.options.addComments)
           outputH.push("/* source: " + localName + " */")
@@ -134,7 +160,7 @@ class AssetToCharArrayPlugin {
           if (this.options.addComments)
             outputCPP.push("      /* source: " + localName + " */")
 
-          outputCPP.push('      server->on("' + localName.replace(/\.gz$/i,'') + '", [](AsyncWebServerRequest *request) {')
+          outputCPP.push('      server->on("' + regex + '", [](AsyncWebServerRequest *request) {')
 
           if ( this.options.debug ) {
             let withChunkedResponse = this.options.chunkedResponse ? ' with chunked response.' : '.'
@@ -151,6 +177,7 @@ class AssetToCharArrayPlugin {
 
           outputCPP.push('         request->send(response);')
           outputCPP.push('      });')
+          outputCPP.push('')
         }
       }) // end file scan forEach
 
