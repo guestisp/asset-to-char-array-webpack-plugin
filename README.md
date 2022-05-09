@@ -33,10 +33,11 @@ You can pass an object of configuration options to `AssetToCharArrayPlugin`, wit
  - `charNamePrefix`: Prefix to use when generating the C/C++ const names. Default: `_`
  - `addComments`: Add a small comment with the file name before each const. Default: `true`,
  - `addServerCalls`: If true, the output file contains also the route mapping. Default: `true`,
- - `namespace`: Namespace to use for the function. Default: `Asset2CharArray`
- - `libraryHeader`: Name of the webserver header file to include in the header file output. Default: `ESPAsyncWebServer.h`
- - `webserverArgument`: Argument to pass to the lambda function. Pointer *MUST* be called `server`. Default: `AsyncWebServer *server`
- - `output_H_filename`: Full path to the output file with C/C++ const chars. Default: `path.resolve(__dirname, 'webapp.h')`
+ - `namespace`: Namespace to use for the function. Default: `Asset2CharArray`,
+ - `chunkedResponse`: Use chunked responses when serving files. Default: `true`,
+ - `libraryHeader`: Name of the webserver header file to include in the header file output. Default: `ESPAsyncWebServer.h`,
+ - `webserverArgument`: Argument to pass to the lambda function. Pointer *MUST* be called `server`. Default: `AsyncWebServer *server`,
+ - `output_H_filename`: Full path to the output file with C/C++ const chars. Default: `path.resolve(__dirname, 'webapp.h')`,
  - `output_CPP_filename`: Full path to the output file with C/C++ server calls. Default: `path.resolve(__dirname, 'webapp.cpp')`
 
 # License

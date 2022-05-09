@@ -16,6 +16,7 @@ class AssetToCharArrayPlugin {
         charNamePrefix: '_',
         addComments: true,
         addServerCalls: true,
+        chunkedResponse: true,
         namespace: 'Asset2CharArray',
         libraryHeader: 'ESPAsyncWebServer.h',
         webserverArgument: 'AsyncWebServer *server',
@@ -60,7 +61,24 @@ class AssetToCharArrayPlugin {
       chars: arr1.join(', '),
       len: fileStr.length
     }
+  }
 
+  generateChunkedResponse(type, char, len) {
+    let str  = '         AsyncWebServerResponse *response = request->beginResponse("'+type+'", '+len+', [](uint8_t *buffer, size_t maxLen, size_t alreadySent) -> size_t {\n'
+        str += '           size_t ReadAmount = 0;\n'
+        str += '\n'
+        str += '           if ( ('+len+' - alreadySent) > maxLen ) {\n'
+        str += '              ReadAmount = maxLen;\n'
+        str += '           } else {\n'
+        str += '              ReadAmount = '+len+' - alreadySent;\n'
+        str += '           }\n'
+        str += '\n'
+        str += '           memcpy_P((char*)buffer, '+char+' + alreadySent, ReadAmount);\n'
+        str += '\n'
+        str += '           return ReadAmount;\n'
+        str += '});\n'
+
+    return str
   }
 
 
@@ -118,10 +136,16 @@ class AssetToCharArrayPlugin {
 
           outputCPP.push('      server->on("' + localName.replace(/\.gz$/i,'') + '", [](AsyncWebServerRequest *request) {')
 
-          if ( this.options.debug )
-            outputCPP.push('         Serial.println("asset-to-char-array-webpack-plugin: serving \''+localName+'\' statically from PROGMEM.");')
+          if ( this.options.debug ) {
+            let withChunkedResponse = this.options.chunkedResponse ? ' with chunked response.' : '.'
+            outputCPP.push('         Serial.println("asset-to-char-array-webpack-plugin: serving \''+localName+'\' statically from PROGMEM' + withChunkedResponse + '");')
+          }
 
-          outputCPP.push('         AsyncWebServerResponse *response = request->beginResponse_P(200, "' + contentType + '", ' + constantString + ', ' + constantLen+');');
+          if ( this.options.chunkedResponse )
+            outputCPP.push(this.generateChunkedResponse(contentType, constantString, constantLen))
+          else
+            outputCPP.push('         AsyncWebServerResponse *response = request->beginResponse_P(200, "' + contentType + '", ' + constantString + ', ' + constantLen+');');
+
           if (/\.(gz|gzip)$/.test(localName))
             outputCPP.push('         response->addHeader("Content-Encoding", "gzip");')
 
