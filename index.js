@@ -11,10 +11,13 @@ class AssetToCharArrayPlugin {
   constructor(options = {}) {
     this.options = {
       ...{
+        debug: true,
         charNamePrefix: '_',
         addComments: true,
-        serverCall: 'server.',
         addServerCalls: true,
+        namespace: 'Asset2CharArray',
+        libraryHeader: 'ESPAsyncWebServer.h',
+        webserverArgument: 'AsyncWebServer *server',
         output_H_filename: path.resolve(__dirname, 'webapp.h'),
         output_CPP_filename: path.resolve(__dirname, 'webapp.cpp')
       },
@@ -83,8 +86,8 @@ class AssetToCharArrayPlugin {
       files.forEach(file => {
         let localName = this.fullPathToLocalPath(file)
         let localName_md5 = CryptoJS.MD5(localName).toString()
-        let constantCharName = this.options.charNamePrefix + localName_md5
-        let constantLenName = this.options.charNamePrefix + localName_md5 + '_len'
+        let constantString = this.options.charNamePrefix + localName_md5
+        let constantLen = this.options.charNamePrefix + localName_md5 + '_len'
         let contentType = mime.getType(file) || "text/plain"
 
         if (this.options.addComments)
@@ -95,26 +98,35 @@ class AssetToCharArrayPlugin {
           len
         } = this.generateCharArray(file)
 
-        outputH.push("const unsigned int " + constantLenName + ' = ' + len + ';')
-        outputH.push("const char " + constantCharName + "[] = {\n " + chars + "\n};")
+        outputH.push("const unsigned int " + constantLen + ' = ' + len + ';')
+        outputH.push("const uint8_t  " + constantString + "[] PROGMEM = {\n " + chars + "\n};")
+
+
 
         if (this.options.addServerCalls) {
-          const serverCall = this.options.serverCall
-
           if (this.options.addComments)
-            outputCPP.push("/* source: " + localName + " */")
+            outputCPP.push("      /* source: " + localName + " */")
 
-          outputCPP.push(serverCall + 'on("' + localName + '", [](AsyncWebServerRequest *request) {')
+          outputCPP.push('      server->on("' + localName + '", [](AsyncWebServerRequest *request) {')
 
+          if ( this.options.debug )
+            outputCPP.push('         Serial.println("asset-to-char-array-webpack-plugin: serving \''+localName+'\' statically from PROGMEM.");')
+
+          outputCPP.push('         AsyncWebServerResponse *response = request->beginResponse_P(200, "' + contentType + '", ' + constantString + ', ' + constantLen+');');
           if (/\.(gz|gzip)$/.test(localName))
-            outputCPP.push('   request.sendHeader("Content-Encoding", "gzip");')
+            outputCPP.push('         response.addHeader("Content-Encoding", "gzip");')
 
-          outputCPP.push('   request.send_P(200, "' + contentType + '", ' + constantCharName + ');')
-          outputCPP.push('});')
+          outputCPP.push('         request->send(response);')
+          outputCPP.push('      });')
         }
       }) // end file scan forEach
 
       if (outputH.length) {
+        outputH.push("");
+        outputH.push('namespace '+this.options.namespace+' {');
+        outputH.push('   void initWebapp(' + this.options.webserverArgument + ');');
+        outputH.push('}');
+
         fs.mkdirSync(path.dirname(this.options.output_H_filename), {
           recursive: true
         })
@@ -122,10 +134,23 @@ class AssetToCharArrayPlugin {
       }
 
       if (outputCPP.length && this.options.addServerCalls) {
+        let outputCPP_head = []
+        let outputCPP_foot = []
+
+        outputCPP_head.push('#include <'+this.options.libraryHeader+'>');
+        outputCPP_head.push('#include "'+this.options.output_H_filename+'"');
+        outputCPP_head.push();
+        outputCPP_head.push('namespace '+this.options.namespace+' {');
+        outputCPP_head.push('   void initWebapp(' + this.options.webserverArgument + ') {');
+
+        outputCPP_foot.push("   }")
+        outputCPP_foot.push("}")
+
+
         fs.mkdirSync(path.dirname(this.options.output_CPP_filename), {
           recursive: true
         })
-        fs.writeFileSync(this.options.output_CPP_filename, outputCPP.join("\n"));
+        fs.writeFileSync(this.options.output_CPP_filename, outputCPP_head.join("\n") + "\n" +outputCPP.join("\n") + "\n" + outputCPP_foot.join("\n"));
       }
     }
 
