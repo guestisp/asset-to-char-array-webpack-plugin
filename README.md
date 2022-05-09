@@ -30,7 +30,7 @@ You can pass an object of configuration options to `AssetToCharArrayPlugin`, wit
 
  - `charNamePrefix`: Prefix to use when generating the C/C++ const names. Default: `_`
  - `addComments`: Add a small comment with the file name before each const. Default: `true`,
- - `serverObject`: Server class names used for the route mapping. Default: `server`,
+ - `serverCall`: String used to call the server method. used for the route mapping. Default: `server.`,
  - `addServerCalls`: If true, the output file contains also the route mapping. Default: `true`,
  - `output_H_filename`: Full path to the output file with C/C++ const chars. Default: `path.resolve(__dirname, 'webapp.h')`
  - `output_CPP_filename`: Full path to the output file with C/C++ server calls. Default: `path.resolve(__dirname, 'webapp.cpp')`- 
