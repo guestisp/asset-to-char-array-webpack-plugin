@@ -28,12 +28,16 @@ Configuration
 
 You can pass an object of configuration options to `AssetToCharArrayPlugin`, with the following optional items:
 
+ - `enable`: Set to `false` to disable the plugin execution without removing from webpack configuration. Default: `true`
+ - `debug`: Add some Serial.println in webserver lambda function to debug which file is being served. Defaut: `true`
  - `charNamePrefix`: Prefix to use when generating the C/C++ const names. Default: `_`
  - `addComments`: Add a small comment with the file name before each const. Default: `true`,
- - `serverCall`: String used to call the server method. used for the route mapping. Default: `server.`,
  - `addServerCalls`: If true, the output file contains also the route mapping. Default: `true`,
+ - `namespace`: Namespace to use for the function. Default: `Asset2CharArray`
+ - `libraryHeader`: Name of the webserver header file to include in the header file output. Default: `ESPAsyncWebServer.h`
+ - `webserverArgument`: Argument to pass to the lambda function. Pointer *MUST* be called `server`. Default: `AsyncWebServer *server`
  - `output_H_filename`: Full path to the output file with C/C++ const chars. Default: `path.resolve(__dirname, 'webapp.h')`
- - `output_CPP_filename`: Full path to the output file with C/C++ server calls. Default: `path.resolve(__dirname, 'webapp.cpp')`- 
+ - `output_CPP_filename`: Full path to the output file with C/C++ server calls. Default: `path.resolve(__dirname, 'webapp.cpp')`
 
 # License
 
