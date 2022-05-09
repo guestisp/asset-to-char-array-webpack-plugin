@@ -13,9 +13,10 @@ class AssetToCharArrayPlugin {
       ...{
         charNamePrefix: '_',
         addComments: true,
-        serverObject: 'server',
+        serverCall: 'server.',
         addServerCalls: true,
-        outputFilename: path.resolve(__dirname, 'webapp.cpp')
+        output_H_filename: path.resolve(__dirname, 'webapp.h'),
+        output_CPP_filename: path.resolve(__dirname, 'webapp.cpp')
       },
       ...options
     }
@@ -43,7 +44,7 @@ class AssetToCharArrayPlugin {
   }
 
   generateCharArray(file) {
-    let fileStr = fs.readFileSync(file, 'utf8');
+    let fileStr = fs.readFileSync(file, 'binary');
 
     var arr1 = [];
     for (var n = 0, l = fileStr.length; n < l; n++) {
@@ -75,7 +76,8 @@ class AssetToCharArrayPlugin {
         return
       }
 
-      const output = []
+      const outputH = []
+      const outputCPP = []
 
       const files = this.getAllFiles(root);
       files.forEach(file => {
@@ -83,35 +85,48 @@ class AssetToCharArrayPlugin {
         let localName_md5 = CryptoJS.MD5(localName).toString()
         let constantCharName = this.options.charNamePrefix + localName_md5
         let constantLenName = this.options.charNamePrefix + localName_md5 + '_len'
-        let contentType = mime.getType(file)
+        let contentType = mime.getType(file) || "text/plain"
 
         if (this.options.addComments)
-          output.push("/* source: " + localName + " */")
+          outputH.push("/* source: " + localName + " */")
 
         let {
           chars,
           len
         } = this.generateCharArray(file)
 
-        output.push("const unsigned int " + constantLenName + ' = ' + len + ';')
-        output.push("const char " + constantCharName + "[] = {\n " + chars + "\n};")
+        outputH.push("const unsigned int " + constantLenName + ' = ' + len + ';')
+        outputH.push("const char " + constantCharName + "[] = {\n " + chars + "\n};")
 
         if (this.options.addServerCalls) {
-          const serverObject = this.options.serverObject
-          output.push(serverObject + '.on("' + localName + '", []() {')
+          const serverCall = this.options.serverCall
 
-          if ( /\.(gz|gzip)$/.test(localName) )
-            output.push('   ' + serverObject + '.sendHeader("Content-Encoding", "gzip");')
+          if (this.options.addComments)
+            outputCPP.push("/* source: " + localName + " */")
 
-          output.push('   ' + serverObject + '.send_P(200, "' + contentType + '", ' + constantCharName + ', ' + constantLenName + ');')
-          output.push('});')
+          outputCPP.push(serverCall + 'on("' + localName + '", [](AsyncWebServerRequest *request) {')
+
+          if (/\.(gz|gzip)$/.test(localName))
+            outputCPP.push('   request.sendHeader("Content-Encoding", "gzip");')
+
+          outputCPP.push('   request.send_P(200, "' + contentType + '", ' + constantCharName + ');')
+          outputCPP.push('});')
         }
-      })
+      }) // end file scan forEach
 
-      console.log('Scrivo su ', this.options.outputFilename)
+      if (outputH.length) {
+        fs.mkdirSync(path.dirname(this.options.output_H_filename), {
+          recursive: true
+        })
+        fs.writeFileSync(this.options.output_H_filename, outputH.join("\n"));
+      }
 
-      fs.mkdirSync(path.dirname(this.options.outputFilename), {recursive:true})
-      fs.writeFileSync(this.options.outputFilename, output.join("\n"));
+      if (outputCPP.length && this.options.addServerCalls) {
+        fs.mkdirSync(path.dirname(this.options.output_CPP_filename), {
+          recursive: true
+        })
+        fs.writeFileSync(this.options.output_CPP_filename, outputCPP.join("\n"));
+      }
     }
 
     if (compiler.hooks) {
