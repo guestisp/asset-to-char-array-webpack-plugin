@@ -11,6 +11,7 @@ class AssetToCharArrayPlugin {
   constructor(options = {}) {
     this.options = {
       ...{
+        enable: true,
         debug: true,
         charNamePrefix: '_',
         addComments: true,
@@ -64,6 +65,14 @@ class AssetToCharArrayPlugin {
 
 
   apply(compiler) {
+    if (!compiler.options.enable ) {
+      console.warn(
+        'asset-to-char-array-webpack-plugin: plugin disabled. Ignoring...',
+      );
+
+      return;
+    }
+
     if (!compiler.options.output || !compiler.options.output.path) {
       console.warn(
         'asset-to-char-array-webpack-plugin: options.output.path not defined. Plugin disabled...',
