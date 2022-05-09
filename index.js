@@ -93,8 +93,8 @@ class AssetToCharArrayPlugin {
           len
         } = this.generateCharArray(file)
 
-        output.push("unsigned int " + constantLenName + ' = ' + len + ';')
-        output.push("unsigned char " + constantCharName + '[] = {' + chars + '};')
+        output.push("const unsigned int " + constantLenName + ' = ' + len + ';')
+        output.push("const char " + constantCharName + '[] = {' + chars + '};')
 
         if (this.options.addServerCalls) {
           const serverObject = this.options.serverObject
