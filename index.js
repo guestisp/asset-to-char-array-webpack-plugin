@@ -65,7 +65,7 @@ class AssetToCharArrayPlugin {
 
 
   apply(compiler) {
-    if (!compiler.options.enable ) {
+    if (!this.options.enable ) {
       console.warn(
         'asset-to-char-array-webpack-plugin: plugin disabled. Ignoring...',
       );
@@ -83,8 +83,8 @@ class AssetToCharArrayPlugin {
     this.outputPath = compiler.options.output.path;
 
     const root = this.outputPath;
-    const done = (statsData) => {
-      if (statsData.hasErrors()) {
+    const done = (compilation) => {
+      if (compilation.getStats().hasErrors()) {
         return
       }
 
@@ -97,7 +97,7 @@ class AssetToCharArrayPlugin {
         let localName_md5 = CryptoJS.MD5(localName).toString()
         let constantString = this.options.charNamePrefix + localName_md5
         let constantLen = this.options.charNamePrefix + localName_md5 + '_len'
-        let contentType = mime.getType(file) || "text/plain"
+        let contentType = mime.getType(file.replace(/\.gz$/i,'')) || "text/plain"
 
         if (this.options.addComments)
           outputH.push("/* source: " + localName + " */")
@@ -116,14 +116,14 @@ class AssetToCharArrayPlugin {
           if (this.options.addComments)
             outputCPP.push("      /* source: " + localName + " */")
 
-          outputCPP.push('      server->on("' + localName + '", [](AsyncWebServerRequest *request) {')
+          outputCPP.push('      server->on("' + localName.replace(/\.gz$/i,'') + '", [](AsyncWebServerRequest *request) {')
 
           if ( this.options.debug )
             outputCPP.push('         Serial.println("asset-to-char-array-webpack-plugin: serving \''+localName+'\' statically from PROGMEM.");')
 
           outputCPP.push('         AsyncWebServerResponse *response = request->beginResponse_P(200, "' + contentType + '", ' + constantString + ', ' + constantLen+');');
           if (/\.(gz|gzip)$/.test(localName))
-            outputCPP.push('         response.addHeader("Content-Encoding", "gzip");')
+            outputCPP.push('         response->addHeader("Content-Encoding", "gzip");')
 
           outputCPP.push('         request->send(response);')
           outputCPP.push('      });')
@@ -167,7 +167,7 @@ class AssetToCharArrayPlugin {
       const plugin = {
         name: "AssetToCharArrayPlugin"
       };
-      compiler.hooks.done.tap(plugin, done);
+      compiler.hooks.afterEmit.tap(plugin, done);
     } else {
       compiler.plugin('done', done);
     }
