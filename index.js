@@ -52,7 +52,7 @@ class AssetToCharArrayPlugin {
     }
 
     return {
-      chars: arr1.join(','),
+      chars: arr1.join(', '),
       len: fileStr.length
     }
 
