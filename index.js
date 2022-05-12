@@ -174,7 +174,7 @@ class AssetToCharArrayPlugin {
           else
             outputCPP.push(this.generateBeginResponsePrototype(contentType, constantLen))
 
-          outputCPP.push(this.generateResponseBody(contentType, constantString, constantLen))
+          outputCPP.push(this.generateResponseBody(constantString, constantLen))
 
           if (/\.(gz|gzip)$/.test(localName))
             outputCPP.push('         response->addHeader("Content-Encoding", "gzip");')
