@@ -84,18 +84,21 @@ class AssetToCharArrayPlugin {
     return regexString.replaceAll(/[.*+?^${}()|[\]\\\/]/g, '\\\\$&');
   }
   
-
-  generateChunkedResponse(type, char, len) {
-    let str  = '         AsyncWebServerResponse *response = request->beginChunkedResponse("'+type+'", [](uint8_t *buffer, size_t maxLen, size_t alreadySent) -> size_t {\n'
-        str += '           size_t ReadAmount = 0;\n'
+  generateChunkedResponsePrototype(type) {
+    return '         AsyncWebServerResponse *response = request->beginChunkedResponse("'+type+'", [](uint8_t *buffer, size_t maxLen, size_t alreadySent) -> size_t {\n'
+  }
+  generateBeginResponsePrototype(type, len) {
+    return '         AsyncWebServerResponse *response = request->beginResponse("'+type+'", '+len+' [](uint8_t *buffer, size_t maxLen, size_t alreadySent) -> size_t {\n'
+  }  
+  generateResponseBody(char, len) {
+    let str  = '           size_t ReadAmount = 0;\n'
         str += '\n'
-        str += '           Serial.print("alreadySent:");\n'
-        str += '           Serial.println(alreadySent);\n'
         str += '           if ( ('+len+' - alreadySent) > maxLen ) {\n'
         str += '              ReadAmount = maxLen;\n'
         str += '           } else {\n'
         str += '              ReadAmount = '+len+' - alreadySent;\n'
         str += '           }\n'
+        str += '           Serial.println("    sending "+String(ReadAmount)+" bytes from position "+String(alreadySent));\n'
         str += '\n'
         str += '           memcpy_P((char*)buffer, '+char+' + alreadySent, ReadAmount);\n'
         str += '\n'
@@ -104,7 +107,6 @@ class AssetToCharArrayPlugin {
 
     return str
   }
-
 
   apply(compiler) {
     if (!this.options.enable ) {
@@ -164,13 +166,15 @@ class AssetToCharArrayPlugin {
 
           if ( this.options.debug ) {
             let withChunkedResponse = this.options.chunkedResponse ? ' with chunked response.' : '.'
-            outputCPP.push('         Serial.println("asset-to-char-array-webpack-plugin: serving \''+localName+'\' statically from PROGMEM' + withChunkedResponse + '");')
+            outputCPP.push('         Serial.println("asset-to-char-array-webpack-plugin: serving \''+localName+'\' from PROGMEM' + withChunkedResponse + '");')
           }
 
           if ( this.options.chunkedResponse )
-            outputCPP.push(this.generateChunkedResponse(contentType, constantString, constantLen))
+            outputCPP.push(this.generateChunkedResponsePrototype(contentType))
           else
-            outputCPP.push('         AsyncWebServerResponse *response = request->beginResponse_P(200, "' + contentType + '", ' + constantString + ', ' + constantLen+');');
+            outputCPP.push(this.generateBeginResponsePrototype(contentType, constantLen))
+
+          outputCPP.push(this.generateResponseBody(contentType, constantString, constantLen))
 
           if (/\.(gz|gzip)$/.test(localName))
             outputCPP.push('         response->addHeader("Content-Encoding", "gzip");')
