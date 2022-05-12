@@ -88,7 +88,7 @@ class AssetToCharArrayPlugin {
     return '         AsyncWebServerResponse *response = request->beginChunkedResponse("'+type+'", [](uint8_t *buffer, size_t maxLen, size_t alreadySent) -> size_t {\n'
   }
   generateBeginResponsePrototype(type, len) {
-    return '         AsyncWebServerResponse *response = request->beginResponse("'+type+'", '+len+'. [](uint8_t *buffer, size_t maxLen, size_t alreadySent) -> size_t {\n'
+    return '         AsyncWebServerResponse *response = request->beginResponse("'+type+'", '+len+', [](uint8_t *buffer, size_t maxLen, size_t alreadySent) -> size_t {\n'
   }  
   generateResponseBody(char, len) {
     let str  = '           size_t ReadAmount = 0;\n'
