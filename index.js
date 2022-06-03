@@ -36,6 +36,7 @@ class AssetToCharArrayPlugin {
         chunkedResponse: true,
         namespace: 'Asset2CharArray',
         libraryHeader: 'ESPAsyncWebServer.h',
+        useRegex: false,
         webserverArgument: 'AsyncWebServer *server',
         output_H_filename: path.resolve(__dirname, 'webapp.h'),
         output_CPP_filename: path.resolve(__dirname, 'webapp.cpp')
@@ -144,6 +145,7 @@ class AssetToCharArrayPlugin {
         let constantLen = this.options.charNamePrefix + localName_md5 + '_len'
         let contentType = mime.getType(file.replace(/\.gz$/i,'')) || "text/plain"
         let regex = '^' + this.escapeRegex(localNameNoGz)+'(\\\\.gz)?$'
+        let uri = this.options.useRegex ? regex : localNameNoGz;
 
         if (this.options.addComments)
           outputH.push("/* source: " + localName + " */")
@@ -162,7 +164,7 @@ class AssetToCharArrayPlugin {
           if (this.options.addComments)
             outputCPP.push("      /* source: " + localName + " */")
 
-          outputCPP.push('      server->on("' + regex + '", [](AsyncWebServerRequest *request) {')
+          outputCPP.push('      server->on("' + uri + '", [](AsyncWebServerRequest *request) {')
 
           if ( this.options.debug ) {
             let withChunkedResponse = this.options.chunkedResponse ? ' with chunked response.' : '.'
