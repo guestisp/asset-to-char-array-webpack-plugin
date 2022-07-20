@@ -34,6 +34,7 @@ class AssetToCharArrayPlugin {
         addComments: true,
         addServerCalls: true,
         chunkedResponse: true,
+        useCache: true,
         namespace: 'Asset2CharArray',
         libraryHeader: 'ESPAsyncWebServer.h',
         useRegex: false,
@@ -180,6 +181,9 @@ class AssetToCharArrayPlugin {
 
           if (/\.(gz|gzip)$/.test(localName))
             outputCPP.push('         response->addHeader("Content-Encoding", "gzip");')
+            
+          if ( this.options.useCache && /\/index\.htm[l]?/.test(localName) )
+            outputCPP.push('         response->addHeader("Cache-Control", "max-age=31536000, immutable");')
 
           outputCPP.push('         request->send(response);')
           outputCPP.push('      });')

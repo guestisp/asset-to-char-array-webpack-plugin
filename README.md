@@ -35,6 +35,7 @@ You can pass an object of configuration options to `AssetToCharArrayPlugin`, wit
  - `addServerCalls`: If true, the output file contains also the route mapping. Default: `true`,
  - `namespace`: Namespace to use for the function. Default: `Asset2CharArray`,
  - `chunkedResponse`: Use chunked responses when serving files. Default: `true`,
+ - `useCache`: Force caching to max-age immutable
  - `libraryHeader`: Name of the webserver header file to include in the header file output. Default: `ESPAsyncWebServer.h`,
  - `webserverArgument`: Argument to pass to the lambda function. Pointer *MUST* be called `server`. Default: `AsyncWebServer *server`,
  - `output_H_filename`: Full path to the output file with C/C++ const chars. Default: `path.resolve(__dirname, 'webapp.h')`,
